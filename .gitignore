@@ -1,0 +1,2 @@
+# Ignore inventory-related secrets
+inventory/hosts.yml

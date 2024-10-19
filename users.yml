@@ -1,0 +1,43 @@
+---
+- name: Add Users
+  hosts: node_exporter
+  become: true
+  tasks:
+    - name: Ensure the user exists
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        shell: /bin/bash
+        state: present
+        create_home: true
+
+    - name: Add the user to the sudo group (Ubuntu)
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        groups: sudo
+        append: true
+      when: ansible_os_family == "Debian"
+
+    - name: Add the user to the wheel group (CentOS/RHEL)
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        groups: wheel
+        append: true
+      when: ansible_os_family == "RedHat"
+
+    # - name: Pause playbook execution until a key is pressed
+    #   ansible.builtin.pause:
+    #     prompt: "Press any key to continue..."
+
+    - name: Add the authorized SSH key
+      ansible.posix.authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ ssh_key }}"
+
+    - name: Ensure sudoers file allows no-password sudo for the user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^{{ user_name }}'
+        line: '{{ user_name }} ALL=(ALL) NOPASSWD:ALL'
+        validate: 'visudo -cf %s'

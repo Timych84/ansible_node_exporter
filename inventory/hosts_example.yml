@@ -1,0 +1,19 @@
+all:
+  hosts:
+    node1:
+      ansible_host: 10.10.10.2
+      ansible_user: root
+    node2:
+      ansible_host: 10.10.10.3
+      ansible_user: admin
+    ca_node:
+      ansible_host: 10.10.10.4
+      ansible_user: admin
+  children:
+    node_exporter:
+      hosts:
+        ubu_node6:
+        centos_node6:
+    ca_control:
+      hosts:
+        ca_node:
