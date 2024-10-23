@@ -2,52 +2,26 @@
 - name: Install node_exporter
   hosts: node_exporter
   become: true
-  become_user: " {{ user_name }}"
+  handlers:
+    - name: Restart node_exporter
+      ansible.builtin.systemd:
+        name: node_exporter
+        state: restarted
   pre_tasks:
-    - name: Create node_exporter cert dir on the target
-      file:
-        path: "/etc/node_exporter"
-        state: directory
-        owner: root
-        group: root
-
-    - name: Copy certificate from control node to the target
-      copy:
-        src: "/home/timych/monitoring/{{ inventory_hostname }}-server-cert.pem"
-        dest: "{{ node_exporter_tls_server_config.cert_file }}"
-        owner: node-exp
-        group: node-exp
-        mode: '0644'
-
-    - name: Copy key from control node to the target
-      copy:
-        src: "/home/timych/monitoring/{{ inventory_hostname }}-server-key.pem"
-        dest: "{{ node_exporter_tls_server_config.key_file }}"
-        owner: node-exp
-        group: node-exp
-        mode: '0600'
-
-    - name: Copy ca cert from control node to the target
-      copy:
-        src: "/home/timych/monitoring/ca-cert.pem"
-        dest: "/etc/node_exporter/ca-cert.pem"
-        owner: node-exp
-        group: node-exp
-        mode: '0644'
-
-    # - name: Pause playbook execution until a key is pressed
-    #   ansible.builtin.pause:
-    #     prompt: "Press any key to continue..."
-
-  #   - name: Create cert and key
-  #     openssl_certificate:
-  #       path: "{{ node_exporter_tls_server_config.cert_file }}"
-  #       csr_path: "{{ node_exporter_tls_server_config.csr_file }}"
-  #       privatekey_path: "{{ node_exporter_tls_server_config.key_file }}"
-  #       provider: selfsigned
-
+    - name: Find out what the remote machine's mounts are
+      ansible.builtin.slurp:
+        src: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+      register: ca_cert
+      delegate_to: ca_node
   tasks:
-
+    - name: Copy ca cert from control node to the target
+      ansible.builtin.copy:
+        dest: "/etc/node_exporter/ca-cert.pem"
+        content: "{{ ca_cert.content | b64decode }}"
+        owner: node-exp
+        group: node-exp
+        mode: '0644'
+      notify: Restart node_exporter
   roles:
     - name: Install and configure node_exporter using the official role
       role: prometheus.prometheus.node_exporter

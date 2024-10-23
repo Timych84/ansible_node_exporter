@@ -1,2 +1,5 @@
 # Ignore inventory-related secrets
 inventory/hosts.yml
+group_vars/prometheus.yml
+group_vars/node_exporter.yml
+group_vars/ca_control.yml

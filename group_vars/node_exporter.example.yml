@@ -4,8 +4,7 @@ node_exporter_web_listen_address: "0.0.0.0:9200"
 node_exporter_tls_server_config:
   cert_file: "/etc/node_exporter/{{ inventory_hostname }}_cert.pem"
   key_file: "/etc/node_exporter/{{ inventory_hostname }}_key.pem"
-  # csr_file: "/etc/node_exporter/{{ inventory_hostname }}_tls.csr"
   client_auth_type : RequireAndVerifyClientCert
   client_ca_file : "/etc/node_exporter/ca-cert.pem"
-user_name: "server_admin"
-ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+user_name: "example_admin"
+ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}" #put your ssh key here

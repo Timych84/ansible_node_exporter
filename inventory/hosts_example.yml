@@ -9,6 +9,9 @@ all:
     ca_node:
       ansible_host: 10.10.10.4
       ansible_user: admin
+    prom_node:
+      ansible_host: 10.10.10.4
+      ansible_user: admin
   children:
     node_exporter:
       hosts:
@@ -17,3 +20,6 @@ all:
     ca_control:
       hosts:
         ca_node:
+    prometheus:
+      hosts:
+        prom_node:

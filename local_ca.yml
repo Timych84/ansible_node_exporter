@@ -13,13 +13,15 @@
         privatekey_path: "{{ ca_key_fullpath }}"
         privatekey_passphrase: "{{ secret_ca_passphrase }}"
         common_name: CA-mon
-        use_common_name_for_san: false  # since we do not specify SANs, don't use CN as a SAN
+        use_common_name_for_san: false
         basic_constraints:
           - 'CA:TRUE'
         basic_constraints_critical: true
         key_usage:
           - keyCertSign
         key_usage_critical: true
+        subject_alt_name:
+          - "DNS:mongrafana01"
       register: ca_csr
 
     - name: Create self-signed CA certificate from CSR

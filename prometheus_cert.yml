@@ -1,0 +1,41 @@
+---
+- name: Create prometheus client cert
+  hosts: prometheus
+  become: true
+  tasks:
+    - name: Create private key
+      community.crypto.openssl_privatekey:
+        path: "{{ prom_key_fullpath }}"
+        owner: "{{ prom_user }}"
+        group: "{{ prom_group }}"
+        mode: '0600'
+
+    - name: Create certificate signing request (CSR) for new certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ prom_key_fullpath }}"
+        subject_alt_name:
+          - "DNS:{{ inventory_hostname }}"
+      register: csr
+
+    - name: Sign certificate with our CA
+      community.crypto.x509_certificate_pipe:
+        # content: "{{ (certificate.content | b64decode) }}"
+        csr_content: "{{ csr.csr }}"
+        provider: ownca
+        ownca_path: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+        ownca_privatekey_path: "{{ hostvars['ca_node']['ca_key_fullpath'] }}"
+        ownca_privatekey_passphrase: "{{ hostvars['ca_node']['secret_ca_passphrase'] }}"
+        ownca_not_after: +3650d  # valid for 10 year
+        ownca_not_before: "-1d"  # valid since yesterday
+      delegate_to: ca_node
+      run_once: true
+      register: certificate
+
+    - name: Write certificate file on server
+      copy:
+        dest: "{{ prom_cert_fullpath }}"
+        content: "{{ certificate.certificate }}"
+        owner: "{{ prom_user }}"
+        group: "{{ prom_group }}"
+        mode: '0644'
+      when: certificate is changed

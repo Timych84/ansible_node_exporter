@@ -1,0 +1,5 @@
+secret_ca_passphrase:  "password"
+prom_cert_fullpath: "/your_path_to_prom_ssl_dir/prometheus-client-cert.pem"
+prom_key_fullpath:  "/your_path_to_prom_ssl_dir/prometheus-client-key.pem"
+prom_user: user
+prom_group: group
