@@ -1,0 +1,31 @@
+---
+- name: Create private key with password protection
+  community.crypto.openssl_privatekey:
+    path: "{{ ca_key_fullpath }}"
+    passphrase: "{{ secret_ca_passphrase }}"
+    cipher: auto
+
+- name: Create certificate signing request (CSR) for CA certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ ca_key_fullpath }}"
+    privatekey_passphrase: "{{ secret_ca_passphrase }}"
+    common_name: "{{ common_name }}"
+    country_name: "{{ country_name }}"  # Country code
+    organization_name: "{{ organization_name }}"  # Organization name
+    use_common_name_for_san: false
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - keyCertSign
+    key_usage_critical: true
+    subject_alt_name: "{{ subject_alt_name | default('') }}"
+  register: ca_csr
+
+- name: Create self-signed CA certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{ ca_cert_fullpath }}"
+    csr_content: "{{ ca_csr.csr }}"
+    privatekey_path: "{{ ca_key_fullpath }}"
+    privatekey_passphrase: "{{ secret_ca_passphrase }}"
+    provider: selfsigned

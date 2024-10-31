@@ -1,0 +1,6 @@
+---
+# handlers file for node_exporter_mtls
+- name: Restart node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: restarted

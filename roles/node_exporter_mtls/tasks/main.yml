@@ -1,0 +1,40 @@
+---
+# tasks file for node_exporter_mtls
+- name: Print variables from vars/main.yml
+  ansible.builtin.debug:
+    msg:
+      - "install_ca_cert: {{ install_ca_cert }}"
+      - "install_node_exporter: {{ install_node_exporter }}"
+      - "install_prometheus: {{ install_prometheus_cert }}"
+      - "install_node_exporter_with_tls: {{ install_node_exporter_with_tls }}"
+      # - "node_exporter_tls_server_config: {{ node_exporter_tls_server_config }}"
+      - "group_names: {{ group_names }}"
+
+- name: Install CA certificate
+  ansible.builtin.include_tasks: local_ca.yml
+  when: "'ca_control' in group_names and install_ca_cert"
+
+- name: Create and copy certs for node_exporter nodes
+  ansible.builtin.include_tasks: node_exporter_cert.yml
+  when: "'node_exporter' in group_names and install_node_exporter and install_node_exporter_with_tls"
+
+- name: Set empty TLS config when it't not needed
+  ansible.builtin.set_fact:
+    node_exporter_tls_server_config: {}
+  when: "'node_exporter' in group_names and install_node_exporter and not install_node_exporter_with_tls"
+
+- name: Print variables from vars/main.yml
+  ansible.builtin.debug:
+    msg:
+      - "node_exporter_tls_server_config: {{ node_exporter_tls_server_config }}"
+  when: "'node_exporter' in group_names and install_node_exporter"
+
+- name: Install node_exporter
+  ansible.builtin.include_role:
+    name: prometheus.prometheus.node_exporter
+  when: "'node_exporter' in group_names and install_node_exporter"
+
+
+- name: Create and copy certs for prometheus
+  ansible.builtin.include_tasks: prometheus_cert.yml
+  when: "'prometheus' in group_names and install_prometheus_cert"

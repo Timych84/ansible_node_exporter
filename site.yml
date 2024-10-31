@@ -1,0 +1,37 @@
+# Load the parameters file
+- name: Intalll node_exporter_mtls
+  hosts: all
+  vars:
+    user_name: "server_admin"
+  pre_tasks:
+    - name: Load required collections from requirements.yml
+      ansible.builtin.include_vars:
+        file: requirements.yml
+        name: required_collections
+
+    - name: Get the list of installed collections
+      delegate_to: localhost
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection list
+      register: collection_list
+      changed_when: false
+
+    - name: Check for required collections
+      delegate_to: localhost
+      ansible.builtin.assert:
+        that:
+          - item.name in collection_list.stdout
+        fail_msg: "Collection '{{ item.name }}' is not installed"
+        success_msg: "Collection '{{ item.name }}' is installed"
+      loop: "{{ required_collections.collections }}"
+
+  tasks:
+    - name: Install node_exporter_mtls role
+      become: true
+      ansible.builtin.import_role:
+        name: node_exporter_mtls
+      vars:
+        install_ca_cert: false
+        install_node_exporter: true
+        install_prometheus_cert: true
+        install_node_exporter_with_tls: true

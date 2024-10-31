@@ -1,0 +1,10 @@
+# CA certificate parameters and location
+secret_ca_passphrase:  "password"
+ca_cert_fullpath: "/etc/ssl/certs/ca-mon-certificate.pem"
+ca_key_fullpath:  "/etc/ssl/private/ca-mon-certificate.key"
+
+# CA certificate fields
+common_name: "CA-mon"  # CA common name
+country_name: "RS"  # Country code
+organization_name: "TIMYCH"  # Organization name
+subject_alt_name: []  # Typically empty for a root CA

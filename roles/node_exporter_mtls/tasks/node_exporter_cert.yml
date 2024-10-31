@@ -1,0 +1,111 @@
+---
+- name: "Create system group {{ node_exporter_group_name }}"
+  ansible.builtin.group:
+    name: "{{ node_exporter_group_name }}"
+    system: true
+    state: present
+
+- name: "Create system user {{ node_exporter_user_name }}"
+  ansible.builtin.user:
+    name: "{{ node_exporter_user_name }}"
+    system: true
+    shell: "/usr/sbin/nologin"
+    group: "{{ node_exporter_group_name }}"
+    create_home: false
+
+- name: Create node_exporter config dir on the target
+  ansible.builtin.file:
+    path: "{{ node_exporter_config_dir }}"
+    state: directory
+    owner: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    mode: '0775'
+
+- name: Create private key
+  community.crypto.openssl_privatekey:
+    path: "{{ node_exporter_tls_server_config.key_file }}"
+    owner: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    mode: '0600'
+
+- name: Create certificate signing request (CSR) for new certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ node_exporter_tls_server_config.key_file }}"
+    common_name: "{{ inventory_hostname }}"
+    country_name: "{{ node_exporter_cert_country_name }}"
+    state_or_province_name: "{{ node_exporter_cert_state_or_province_name }}"
+    locality_name: "{{ node_exporter_cert_locality_name }}"
+    organization_name: "{{ node_exporter_cert_organization_name }}"
+    organizational_unit_name: "{{ node_exporter_cert_organizational_unit_name }}"
+    subject_alt_name:
+      - "DNS:{{ inventory_hostname }}"
+      - "{{ additional_san | default('') }}"
+  register: csr
+
+- name: Check whether certificate exists
+  ansible.builtin.stat:
+    path: "{{ node_exporter_tls_server_config.cert_file }}"
+  register: certificate_exists
+
+- name: Read certificate's contents from remote machine
+  ansible.builtin.slurp:
+    src: "{{ node_exporter_tls_server_config.cert_file }}"
+  when: certificate_exists.stat.exists
+  register: certificate_content
+
+- name: Check current certificate expiration date
+  community.crypto.x509_certificate_info:
+    path: "{{ node_exporter_tls_server_config.cert_file }}"
+    valid_at:
+      point_1: "+{{ cert_valid_days }}d"
+  register: cert_info
+  when: certificate_exists.stat.exists
+  failed_when: false  # Continue if certificate is missing or invalid
+
+
+- name: Sign certificate with our CA
+  community.crypto.x509_certificate_pipe:
+    content: "{{ (certificate_content.content | b64decode) if certificate_exists.stat.exists and cert_info.valid_at.point_1 else omit }}"
+    csr_content: "{{ csr.csr }}"
+    provider: ownca
+    ownca_path: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+    ownca_privatekey_path: "{{ hostvars['ca_node']['ca_key_fullpath'] }}"
+    ownca_privatekey_passphrase: "{{ hostvars['ca_node']['secret_ca_passphrase'] }}"
+    ownca_not_after: +365d  # valid for 10 year
+    ownca_not_before: "-1d"  # valid since yesterday
+  delegate_to: ca_node
+  # run_once: true
+  register: certificate
+
+# tasks file for node_exporter_mtls
+# - name: Print variables from vars/main.yml
+#   ansible.builtin.debug:
+#     msg:
+#       - "cert_info: {{ cert_info }}"
+#       - "certificate: {{ certificate }}"
+
+- name: Write certificate file on server
+  ansible.builtin.copy:
+    dest: "{{ node_exporter_tls_server_config.cert_file }}"
+    content: "{{ certificate.certificate }}"
+    owner: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    mode: '0644'
+  # run_once: true
+  # when: certificate is changed
+  notify: Restart node_exporter
+
+- name: Read current CA cert
+  ansible.builtin.slurp:
+    src: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+  register: ca_cert
+  delegate_to: ca_node
+
+- name: Copy CA cert from control node to the target
+  ansible.builtin.copy:
+    dest: "{{ node_exporter_tls_server_config.client_ca_file }}"
+    content: "{{ ca_cert.content | b64decode }}"
+    owner: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    mode: '0644'
+  notify: Restart node_exporter

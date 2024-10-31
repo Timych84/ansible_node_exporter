@@ -1,0 +1,19 @@
+# Node exporter parameters
+node_exporter_version: "1.8.2"
+node_exporter_systemd: true
+node_exporter_web_listen_address: "0.0.0.0:9200"
+node_exporter_config_dir: "/etc/node_exporter"
+node_exporter_tls_server_config:
+  cert_file: "{{ node_exporter_config_dir }}/{{ inventory_hostname }}_cert.pem"
+  key_file: "{{ node_exporter_config_dir }}/{{ inventory_hostname }}_key.pem"
+  client_auth_type: RequireAndVerifyClientCert
+  client_ca_file: "{{ node_exporter_config_dir }}/ca-cert.pem"
+node_exporter_user_name: node-exp
+node_exporter_group_name: node-exp
+
+# Certificate fields
+node_exporter_cert_country_name: "ORG"
+node_exporter_cert_state_or_province_name: "SomeState"
+node_exporter_cert_locality_name: "SomeCity"
+node_exporter_cert_organization_name: "SomeORG"
+node_exporter_cert_organizational_unit_name: "SomeORGOU"

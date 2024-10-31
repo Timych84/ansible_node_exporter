@@ -1,0 +1,7 @@
+---
+collections:
+  # Install a role from Ansible Galaxy.
+  - name: prometheus.prometheus
+    version: "0.21.0" # note that ranges are not supported for roles
+  - name: community.crypto
+    version: "2.22.1"

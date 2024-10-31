@@ -1,3 +1,0 @@
-secret_ca_passphrase:  "password"
-ca_cert_fullpath: "/etc/ssl/certs/ca-mon-certificate.pem"
-ca_key_fullpath:  "/etc/ssl/private/ca-mon-certificate.key"

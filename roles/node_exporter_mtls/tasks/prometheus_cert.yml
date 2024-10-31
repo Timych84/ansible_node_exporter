@@ -1,0 +1,106 @@
+---
+- name: Check if the prometheus ssl directory exists
+  ansible.builtin.stat:
+    path: "{{ prom_ssl_config_folder }}"
+  register: prom_ssl_dir_stat
+
+- name: Fail if the prometheus ssl directory does not exist
+  ansible.builtin.fail:
+    msg: "The directory {{ prom_ssl_config_folder }} does not exist. Wrong dir or prometheus is not installed?"
+  when: not prom_ssl_dir_stat.stat.exists
+
+# - name: Check if the user exists
+#   ansible.builtin.getent:
+#     database: passwd
+#     key: your_user
+#   register: user_info
+
+# - name: Check if the group exists
+#   ansible.builtin.getent:
+#     database: group
+#     key: your_group
+#   register: group_info
+
+# - name: Fail if directory, user, or group does not exist
+#   ansible.builtin.fail:
+#     msg: >
+#       The following are missing:
+#       {% if not dir_stat.stat.exists %} Directory: /path/to/your/directory {% endif %}
+#       {% if not user_info.found %} User: your_user {% endif %}
+#       {% if not group_info.found %} Group: your_group {% endif %}
+#   when: not dir_stat.stat.exists or not user_info.found or not group_info.found
+
+- name: Create private key
+  community.crypto.openssl_privatekey:
+    path: "{{ prom_ssl_config_folder }}/{{ prom_key_name }}"
+    owner: "{{ prom_user }}"
+    group: "{{ prom_group }}"
+    mode: '0600'
+
+- name: Create certificate signing request (CSR) for new certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ prom_ssl_config_folder }}/{{ prom_key_name }}"
+    subject_alt_name:
+      - "DNS:{{ inventory_hostname }}"
+  register: csr
+
+- name: Check whether certificate exists
+  ansible.builtin.stat:
+    path: "{{ prom_ssl_config_folder }}/{{ prom_cert_name }}"
+  register: certificate_exists
+
+- name: Read certificate's contents from remote machine
+  ansible.builtin.slurp:
+    src: "{{ prom_ssl_config_folder }}/{{ prom_cert_name }}"
+  when: certificate_exists.stat.exists
+  register: certificate_content
+
+- name: Check current certificate expiration date
+  community.crypto.x509_certificate_info:
+    path: "{{ prom_ssl_config_folder }}/{{ prom_cert_name }}"
+    valid_at:
+      point_1: "+{{ cert_valid_days }}d"
+  register: cert_info
+  when: certificate_exists.stat.exists
+  failed_when: false  # Continue if certificate is missing or invalid
+
+- name: Sign certificate with our CA
+  community.crypto.x509_certificate_pipe:
+    content: "{{ (certificate_content.content | b64decode) if certificate_exists.stat.exists and cert_info.valid_at.point_1 else omit }}"
+    csr_content: "{{ csr.csr }}"
+    provider: ownca
+    ownca_path: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+    ownca_privatekey_path: "{{ hostvars['ca_node']['ca_key_fullpath'] }}"
+    ownca_privatekey_passphrase: "{{ hostvars['ca_node']['secret_ca_passphrase'] }}"
+    ownca_not_after: +365d  # valid for 10 year
+    ownca_not_before: "-1d"  # valid since yesterday
+  delegate_to: ca_node
+  register: certificate
+
+# - name: Print variables from vars/main.yml
+#   ansible.builtin.debug:
+#     msg:
+#       - "cert_info: {{ cert_info }}"
+#       - "certificate: {{ certificate }}"
+
+- name: Write certificate file on server
+  ansible.builtin.copy:
+    dest: "{{ prom_ssl_config_folder }}/{{ prom_cert_name }}"
+    content: "{{ certificate.certificate }}"
+    owner: "{{ prom_user }}"
+    group: "{{ prom_group }}"
+    mode: '0644'
+
+- name: Read current CA cert
+  ansible.builtin.slurp:
+    src: "{{ hostvars['ca_node']['ca_cert_fullpath'] }}"
+  register: ca_cert
+  delegate_to: ca_node
+
+- name: Copy CA cert from control node to the target
+  ansible.builtin.copy:
+    dest: "{{ prom_ssl_config_folder }}/{{ prom_ca_cert_name }}"
+    content: "{{ ca_cert.content | b64decode }}"
+    owner: "{{ prom_user }}"
+    group: "{{ prom_group }}"
+    mode: '0644'

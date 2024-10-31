@@ -1,0 +1,7 @@
+# Prometheus client certificate parameters
+prom_ssl_config_folder: "/your_path_to_prom_ssl_dir"
+prom_cert_name: "prometheus-client-cert.pem"
+prom_key_name:  "prometheus-client-key.pem"
+prom_ca_cert_name: "ca-mon-certificate.pem"
+prom_user: prom_user
+prom_group: prom_group

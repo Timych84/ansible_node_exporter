@@ -1,5 +1,12 @@
-# Ignore inventory-related secrets
+# Ignore sensitive files
+*.retry
+*.log
+*.pem
+*.key
+
+# Ignore local configuration files
+ansible.cfg
 inventory/hosts.yml
-group_vars/prometheus.yml
-group_vars/node_exporter.yml
-group_vars/ca_control.yml
+**/*/prometheus.yml
+**/*/node_exporter.yml
+**/*/ca_control.yml
