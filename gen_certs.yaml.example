@@ -4,6 +4,7 @@ ca:
 
 cert:
   cert_validity: 3650
+  cert_dir: "./certs/"
 
 organization:
   country: "RS"

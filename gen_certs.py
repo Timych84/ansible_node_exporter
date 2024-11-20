@@ -90,7 +90,7 @@ for server in servers:
         .sign(ca_key, hashes.SHA256())
     )
     # Write certificate and key to files
-    write_pem(cert.public_bytes(serialization.Encoding.PEM), os.path.join(server["output_dir"], "cert.pem"))
+    write_pem(cert.public_bytes(serialization.Encoding.PEM), os.path.join(config["cert"]["cert_dir"], server["name"], "cert.pem"))
     write_pem(key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
