@@ -3,6 +3,8 @@
 *.log
 *.pem
 *.key
+certs/
+gen_certs.yaml
 
 # Ignore local configuration files
 ansible.cfg

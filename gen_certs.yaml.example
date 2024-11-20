@@ -1,0 +1,27 @@
+ca:
+  cert_path: "/etc/ssl/certs/ca-certificate.pem"
+  key_path: "/etc/ssl/private/ca-certificate.key"
+
+cert:
+  cert_validity: 3650
+
+organization:
+  country: "RS"
+  state: "Vojvodina"
+  locality: "Novi Sad"
+  organization_name: "ORGANIZATION"
+  organizational_unit_name: "ORGANIZATION"
+
+servers:
+  - name: "server1"
+    cn: "server1.example.com"
+    san:
+      - "server1.example.com"
+      - "www.server1.example.com"
+    output_dir: "./certs/server1"
+
+  - name: "server2"
+    cn: "server2.example.com"
+    san:
+      - "server2.example.com"
+    output_dir: "./certs/server2"
