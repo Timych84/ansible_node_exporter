@@ -95,6 +95,6 @@ for server in servers:
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
-    ), os.path.join(config["cert"]["cert_dir"], server["name"], "cert.pem"))
+    ), os.path.join(config["cert"]["cert_dir"], server["name"], "key.pem"))
 
 print("Certificates and keys generated successfully.")
