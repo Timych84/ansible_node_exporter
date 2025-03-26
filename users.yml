@@ -3,8 +3,8 @@
   hosts: node_exporter
   become: true
   vars:
-    user_name: "server_admin"
-    ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    user_name: "srvadmin"
+    ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
   tasks:
     - name: Ensure the user exists
       ansible.builtin.user:

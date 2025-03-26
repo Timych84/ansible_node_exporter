@@ -33,5 +33,5 @@
       vars:
         install_ca_cert: false
         install_node_exporter: true
-        install_prometheus_cert: true
+        install_prometheus_cert: false
         install_node_exporter_with_tls: true
