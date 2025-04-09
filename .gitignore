@@ -12,3 +12,4 @@ inventory/hosts.yml
 **/*/prometheus.yml
 **/*/node_exporter.yml
 **/*/ca_control.yml
+**/*/snmp_exporter.yml

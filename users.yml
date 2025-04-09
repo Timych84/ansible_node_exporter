@@ -1,6 +1,6 @@
 ---
 - name: Add Users
-  hosts: node_exporter
+  hosts: node_exporter:snmp_exporter
   become: true
   vars:
     user_name: "srvadmin"

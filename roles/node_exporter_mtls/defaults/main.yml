@@ -1,6 +1,8 @@
 ---
 install_ca_cert: false
-install_node_exporter: true
 install_prometheus_cert: true
+install_node_exporter: true
 install_node_exporter_with_tls: true
+# install_snmp_exporter: true
+# install_snmp_exporter_with_tls: true
 cert_valid_days: "36"
