@@ -1,6 +1,5 @@
-Role Name
+Node_exporter_mtls
 =========
-### **node_exporter_mtls**
 This role configures [Prometheus Node Exporter](https://github.com/prometheus/node_exporter) with **mutual TLS (mTLS)** support using a custom Certificate Authority (CA).
 
 It includes tasks for:
