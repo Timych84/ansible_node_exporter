@@ -54,7 +54,7 @@
 #       - "snmp_exporter_tls_server_config: {{ snmp_exporter_tls_server_config }}"
 #   when: "'snmp_exporter' in group_names and install_snmp_exporter"
 
-# - name: Install snmp_exporter
-#   ansible.builtin.include_role:
-#     name: prometheus.prometheus.snmp_exporter
-#   when: "'snmp_exporter' in group_names and install_snmp_exporter"
+- name: Install snmp_exporter
+  ansible.builtin.include_role:
+    name: prometheus.prometheus.snmp_exporter
+  when: "'snmp_exporter' in group_names and install_snmp_exporter"

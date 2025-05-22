@@ -4,12 +4,12 @@
 *.pem
 *.key
 certs/
-gen_certs.yaml
 
 # Ignore local configuration files
 ansible.cfg
+gen_certs.yaml
 inventory/hosts.yml
-**/*/prometheus.yml
+**/*/prom.yml
 **/*/node_exporter.yml
 **/*/ca_control.yml
 **/*/snmp_exporter.yml

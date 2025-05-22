@@ -90,11 +90,11 @@ for server in servers:
         .sign(ca_key, hashes.SHA256())
     )
     # Write certificate and key to files
-    write_pem(cert.public_bytes(serialization.Encoding.PEM), os.path.join(config["cert"]["cert_dir"], server["name"], "windows_exporter_cert.pem"))
+    write_pem(cert.public_bytes(serialization.Encoding.PEM), os.path.join(config["cert"]["cert_dir"], server["name"], f"{server['name']}_cert.pem"))
     write_pem(key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
-    ), os.path.join(config["cert"]["cert_dir"], server["name"], "windows_exporter_key.pem"))
+    ), os.path.join(config["cert"]["cert_dir"], server["name"], f"{server['name']}_key.pem"))
 
 print("Certificates and keys generated successfully.")
