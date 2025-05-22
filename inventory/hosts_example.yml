@@ -12,6 +12,9 @@ all:
     prom_node:
       ansible_host: 10.10.10.4
       ansible_user: admin
+    snmp_node:
+      ansible_host: 10.10.10.5
+      ansible_user: admin
   children:
     node_exporter:
       hosts:
@@ -23,3 +26,6 @@ all:
     prometheus:
       hosts:
         prom_node:
+    snmp_exporter:
+      hosts:
+        snmp_node:
