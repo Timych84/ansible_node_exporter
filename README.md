@@ -2,7 +2,7 @@
 
 This repository provides an Ansible playbook and role to install and configure [Prometheus Node Exporter](https://github.com/prometheus/node_exporter) **with mutual TLS authentication (mTLS)**.
 
-- Uses [prometheus.prometheus.node_exporter](https://galaxy.ansible.com/prometheus/prometheus) collection to install the exporter.
+- Uses [prometheus.prometheus.node_exporter](https://galaxy.ansible.com/ui/repo/published/prometheus/prometheus/) collection to install the exporter.
 - Includes a custom role to generate and distribute TLS certificates using `community.crypto`.
 - Optionally supports manual certificate generation via `gen_certs.py`.
 

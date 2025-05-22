@@ -3,18 +3,24 @@ all:
     node1:
       ansible_host: 10.10.10.2
       ansible_user: root
+      ansible_port: 2122
+      additional_san: "DNS:node1.domain.example"
     node2:
       ansible_host: 10.10.10.3
       ansible_user: admin
+      additional_san: "DNS:node2.domain.example"
     ca_node:
       ansible_host: 10.10.10.4
       ansible_user: admin
+      additional_san: "DNS:ca_node.domain.example"
     prom_node:
       ansible_host: 10.10.10.4
       ansible_user: admin
+      additional_san: "DNS:prom_node.domain.example"
     snmp_node:
       ansible_host: 10.10.10.5
       ansible_user: admin
+      additional_san: "DNS:snmp_node.domain.example"
   children:
     node_exporter:
       hosts:

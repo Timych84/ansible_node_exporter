@@ -1,38 +1,91 @@
 Role Name
 =========
+### **node_exporter_mtls**
+This role configures [Prometheus Node Exporter](https://github.com/prometheus/node_exporter) with **mutual TLS (mTLS)** support using a custom Certificate Authority (CA).
 
-A brief description of the role goes here.
+It includes tasks for:
+
+- Creating a local CA
+- Generating and signing node certificates
+- Optionally generating a Prometheus client certificate
+- Configuring Node Exporter to require client certificates
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+This role depends on:
+
+- `community.crypto` collection for TLS handling
+- `prometheus.prometheus` main prometheus ollection
+
+Install with:
+
+```bash
+ansible-galaxy install -r requirements.yml
+```
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+This role expects all variables to be defined externally, typically in group_vars or host_vars. This includes:
+- Certificate subject fields (country, organization, common name, etc.)
+- TLS certificate and key paths
+- CA settings
+- Any other environment-specific options
 
-Dependencies
-------------
+This design choice keeps the role clean and allows full control and customization by the user. There are no default variables inside the role.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Examples can be found by the [Link](https://github.com/Timych84/ansible_node_exporter/tree/master/inventory)
+
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+- name: Intalll node_exporter_mtls
+  hosts: all
+  pre_tasks:
+    - name: Load required collections from requirements.yml
+      ansible.builtin.include_vars:
+        file: requirements.yml
+        name: required_collections
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+    - name: Get the list of installed collections
+      delegate_to: localhost
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection list
+      register: collection_list
+      changed_when: false
+
+    - name: Check for required collections
+      delegate_to: localhost
+      ansible.builtin.assert:
+        that:
+          - item.name in collection_list.stdout
+        fail_msg: "Collection '{{ item.name }}' is not installed"
+        success_msg: "Collection '{{ item.name }}' is installed"
+      loop: "{{ required_collections.collections }}"
+
+  tasks:
+    - name: Install node_exporter_mtls role
+      become: true
+      ansible.builtin.import_role:
+        name: node_exporter_mtls
+      vars:
+        install_ca_cert: false
+        install_node_exporter: true
+        install_prometheus_cert: false
+        install_node_exporter_with_tls: true
+        install_snmp_exporter: false
+```
+
 
 License
 -------
 
-BSD
+MIT License
 
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Timur Alekseev
